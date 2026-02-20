@@ -59,7 +59,7 @@ class EmailSender:
             
             # Crear cuerpo del email
             body = self._create_email_body(test_results)
-            message.attach(MIMEText(body, "html"))
+            message.attach(MIMEText(body, "html", "utf-8"))
             
             # Adjuntar reportes
             self._attach_reports(message, report_path)
@@ -164,10 +164,10 @@ class EmailSender:
         html_report = os.path.join(report_path, "report.html")
         if os.path.exists(html_report):
             try:
-                with open(html_report, "rb") as attachment:
-                    part = MIMEBase("application", "octet-stream")
-                    part.set_payload(attachment.read())
-                    part.add_header("Content-Disposition", f"attachment; filename= report.html")
+                with open(html_report, "r", encoding="utf-8") as attachment:
+                    html_content = attachment.read()
+                    part = MIMEText(html_content, "html", "utf-8")
+                    part.add_header("Content-Disposition", f"attachment; filename=report.html")
                     message.attach(part)
                     logger.info("✓ Reporte HTML adjuntado")
             except Exception as e:

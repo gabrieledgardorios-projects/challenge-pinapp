@@ -41,7 +41,7 @@ pipeline {
         )
         string(
             name: 'EMAIL_USER',
-            defaultValue: 'tu-email@gmail.com',
+                defaultValue: 'bot.gmail@gmail.com',
             description: 'Usuario de email para enviar reportes (Gmail)'
         )
         password(
