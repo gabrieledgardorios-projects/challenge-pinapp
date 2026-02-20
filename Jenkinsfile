@@ -400,6 +400,8 @@ EOF
                         echo "Entorno virtual encontrado en ${PYTHON_ENV}"
                     fi
                 '''
+                    echo "Enlace directo al reporte Allure: ${env.BUILD_URL}Allure_Report/"
+                    echo "Enlace directo a artefactos grabaciones: ${env.BUILD_URL}artifact/reports/"
             }
         }
         
