@@ -380,40 +380,40 @@ EOF
         }
     }
     
-    post {
-        always {
-            script {
-                echo """
-                ╔════════════════════════════════════════════════════════╗
-                ║                 RESUMEN DE BUILD                       ║
-                ╠════════════════════════════════════════════════════════╣
-                ║ Build Status: ${currentBuild.result}
-                ║ Artefactos: reports/ (descargables)
-                ║ Logs: console output
-                ║ Workspace: ${WORKSPACE}
-                ╚════════════════════════════════════════════════════════╝
-                """
-                    echo "[ENLACE] Reporte Allure: ${env.BUILD_URL}Allure_Report/"
-                
-                // Limpiar ambiente virtual viejo (opcional)
-                sh '''
-                    if [ -d "${PYTHON_ENV}" ]; then
-                        echo "Entorno virtual encontrado en ${PYTHON_ENV}"
-                    fi
-                '''
-                    echo "Enlace directo al reporte Allure: ${env.BUILD_URL}Allure_Report/"
-                    echo "Enlace directo a artefactos grabaciones: ${env.BUILD_URL}artifact/reports/"
+            steps {
+                script {
+                    echo "========== Publicando reportes en Jenkins =========="
+                    // ...existing code...
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'reports/allure-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Allure Report',
+                        reportTitles: "Allure Report #${env.BUILD_NUMBER}"
+                    ])
+                }
+                echo "[ENLACE] Reporte Allure: ${env.BUILD_URL}Allure_Report/"
             }
-        }
-        
-        success {
-            script {
-                echo "========== ✓ BUILD EXITOSO =========="
-                currentBuild.result = 'SUCCESS'
-                
-                // Enviar email si está habilitado
-                if (params.SEND_EMAIL) {
-                    sendEmailNotification('SUCCESS')
+                steps {
+                    script {
+                        echo "========== Archivando artefactos =========="
+                        archiveArtifacts(
+                            artifacts: [
+                                'reports/report.html',
+                                'reports/test.log',
+                                'reports/allure-results/**',
+                                'reports/screenshots/**',
+                                'reports/coverage/**',
+                                'reports/*.avi'
+                            ].join(','),
+                            allowEmptyArchive: true,
+                            fingerprint: true
+                        )
+                    }
+                    echo "[ENLACE] Artefactos grabaciones y reportes: ${env.BUILD_URL}artifact/reports/"
+                }
                 }
             }
         }
