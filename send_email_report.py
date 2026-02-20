@@ -44,15 +44,19 @@ def parse_pytest_report(report_path: str = "reports") -> dict:
     log_file = os.path.join(report_path, "test.log")
     if os.path.exists(log_file):
         try:
-            with open(log_file, "r", encoding="utf-8") as f:
-                content = f.read()
-                # Buscar patrones en el log
-                if "passed" in content.lower():
-                    results["passed"] += content.lower().count("passed")
-                if "failed" in content.lower():
-                    results["failed"] += content.lower().count("failed")
-                if "skipped" in content.lower():
-                    results["skipped"] += content.lower().count("skipped")
+            try:
+                with open(log_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+            except UnicodeDecodeError:
+                with open(log_file, "r", encoding="latin-1", errors="replace") as f:
+                    content = f.read()
+            # Buscar patrones en el log
+            if "passed" in content.lower():
+                results["passed"] += content.lower().count("passed")
+            if "failed" in content.lower():
+                results["failed"] += content.lower().count("failed")
+            if "skipped" in content.lower():
+                results["skipped"] += content.lower().count("skipped")
         except Exception as e:
             logger.warning(f"No se pudo leer el log de pruebas: {e}")
     
@@ -89,11 +93,17 @@ def main():
         # Parsear resultados de las pruebas
         test_results = parse_pytest_report()
         
+        # Obtener credenciales de email desde variables de entorno
+        sender_email = os.getenv("EMAIL_USER") or os.getenv("SENDER_EMAIL")
+        sender_password = os.getenv("EMAIL_PASSWORD") or os.getenv("SENDER_PASSWORD")
+        
         # Enviar email
         success = send_test_report_email(
             recipients=email_recipients,
             test_results=test_results,
-            report_path="reports"
+            report_path="reports",
+            sender_email=sender_email,
+            sender_password=sender_password
         )
         
         if success:
@@ -106,8 +116,8 @@ def main():
     except Exception as e:
         logger.error(f"❌ Error durante el envío de email: {str(e)}")
         logger.error("Nota: Asegúrate de configurar las variables de entorno:")
-        logger.error("  - SENDER_EMAIL: email del remitente")
-        logger.error("  - SENDER_PASSWORD: contraseña de la aplicación (no contraseña normal)")
+        logger.error("  - EMAIL_USER: email del remitente")
+        logger.error("  - EMAIL_PASSWORD: contraseña de la aplicación (no contraseña normal)")
         return 1
 
 
