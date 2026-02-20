@@ -181,22 +181,120 @@ Extracción datos → VideoRecorder detiene → Reportes
 //div[@aria-hidden='false']//*[@id='s-result-sort-select_2']
 ```
 
-##  Integración CI/CD con Jenkins
+## 🚀 Integración CI/CD con Jenkins
 
-### ✨ Características del Jenkinsfile
+### Pasos para ejecutar Jenkins y el job
 
-#### 🔧 Parámetros Configurables
+#### 1. Instalar Java (si no tienes)
+Descarga e instala Java 17+ desde https://adoptium.net/
 
-El Jenkinsfile incluye los siguientes parámetros que puedes configurar en cada ejecución:
+#### 2. Descargar Jenkins WAR
+En la raíz del proyecto:
+```powershell
+Invoke-WebRequest -Uri "https://mirrors.jenkins.io/war-stable/2.479.3/jenkins.war" -OutFile "jenkins.war"
+```
 
-| Parámetro | Tipo | Valor Default | Descripción |
-|-----------|------|----------------|-----------| 
-| **BROWSER** | Choice | chrome | Navegador: chrome o firefox |
-| **HEADLESS** | Boolean | false | Ejecutar sin interfaz gráfica |
-| **BASE_URL** | String | https://www.amazon.com | URL del sitio a probar |
-| **TEST_TYPE** | Choice | all | Tipo: all, smoke, regression, sanity |
-| **EMAIL_RECIPIENTS** | String | qa-team@example.com | Email para notificaciones |
-| **SEND_EMAIL** | Boolean | true | Activar notificaciones por email |
+#### 3. Ejecutar Jenkins
+```powershell
+java -jar jenkins.war --httpPort=8080
+```
+Abre tu navegador en http://localhost:8080
+
+#### 4. Primer acceso
+Jenkins te pedirá una contraseña inicial:
+```
+C:\Users\TU_USUARIO\.jenkins\secrets\initialAdminPassword
+```
+Usa el usuario `admin` y esa contraseña.
+
+#### 5. Crear un Job Freestyle
+1. Click en "New Item"
+2. Nombre: `Amazon-Test-Job`
+3. Selecciona "Freestyle job"
+4. Click OK
+
+#### 6. Configurar parámetros
+Marca "This project is parameterized" y agrega:
+- **BROWSER** (Choice): chrome, firefox
+- **HEADLESS** (Boolean): false
+- **BASE_URL** (String): https://www.amazon.com
+- **TEST_TYPE** (Choice): all, smoke, regression, sanity
+- **EMAIL_RECIPIENTS** (String): tu@correo.com
+- **SEND_EMAIL** (Boolean): false
+
+#### 7. Build step (Execute Windows batch command)
+Pega este comando:
+```batch
+@echo off
+cd /d C:\Users\TU_USUARIO\OneDrive\Escritorio\Challenge
+call .venv\Scripts\activate.bat
+pip install -r requirements.txt
+
+set BROWSER=%BROWSER%
+set HEADLESS=%HEADLESS%
+set BASE_URL=%BASE_URL%
+set SEND_EMAIL=%SEND_EMAIL%
+set EMAIL_RECIPIENTS=%EMAIL_RECIPIENTS%
+
+if "%HEADLESS%"=="true" (
+   pytest tests/ -v --browser=%BROWSER% --headless --base-url=%BASE_URL% --alluredir=reports/allure-results
+) else (
+   pytest tests/ -v --browser=%BROWSER% --base-url=%BASE_URL% --alluredir=reports/allure-results
+)
+
+allure generate reports/allure-results -o reports/allure-report --clean
+python send_email_report.py
+
+echo.
+echo ========== RESUMEN DEL BUILD ==========
+echo Browser: %BROWSER%
+echo Headless: %HEADLESS%
+echo Base URL: %BASE_URL%
+echo Send Email: %SEND_EMAIL%
+echo Email Recipients: %EMAIL_RECIPIENTS%
+echo ======================================
+```
+
+#### 8. Configurar variables de entorno para email
+En Jenkins → Manage Jenkins → Configure System → Global properties → Environment variables:
+- `SENDER_EMAIL`: tu_email@gmail.com
+- `SENDER_PASSWORD`: contraseña de aplicación (no la normal)
+
+#### 9. Ejecutar el job
+Click en "Build with Parameters", selecciona valores y ejecuta.
+
+#### 10. Resultado
+- Reportes generados en `reports/`
+- Email enviado si `SEND_EMAIL` está activado
+- Artefactos descargables: logs, videos, screenshots
+
+---
+
+### Troubleshooting
+- Si el email no se envía: revisa variables de entorno, credenciales, y configuración SMTP.
+- Si Jenkins no arranca: revisa versión de Java y puerto 8080.
+- Si Allure no funciona: instala Allure CLI y verifica PATH.
+
+---
+
+### Ejemplo de ejecución local
+```powershell
+pytest tests/ --browser=chrome --headless --base-url=https://www.amazon.com --alluredir=reports/allure-results
+allure generate reports/allure-results -o reports/allure-report --clean
+python send_email_report.py
+```
+
+---
+
+### Parámetros del job
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| BROWSER | Choice | chrome | Navegador: chrome o firefox |
+| HEADLESS | Boolean | false | Ejecutar sin interfaz gráfica |
+| BASE_URL | String | https://www.amazon.com | URL del sitio a probar |
+| TEST_TYPE | Choice | all | Tipo de test: all, smoke, regression, sanity |
+| EMAIL_RECIPIENTS | String | qa-team@example.com | Email para notificaciones |
+| SEND_EMAIL | Boolean | false | Activar notificaciones por email |
 
 #### 📋 Stages del Pipeline
 
