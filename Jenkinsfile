@@ -168,12 +168,19 @@ pipeline {
         stage('Generar Reportes Allure') {
             steps {
                 script {
+                    echo "========== Instalando Allure CLI =========="
+                    sh '''
+                        # Instalar Allure CLI si no existe
+                        if [ ! -d "allure" ]; then
+                            wget -q https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip -O allure.zip || curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
+                            unzip -q allure.zip
+                            mv allure-2.24.1 allure
+                        fi
+                        export PATH="$PWD/allure/bin:$PATH"
+                    '''
                     echo "========== Generando Reporte Allure =========="
-                    
-                    // Verificar si allure está disponible
                     sh '''
                         . ${PYTHON_ENV}/bin/activate 2>/dev/null || . ${PYTHON_ENV}/Scripts/activate 2>/dev/null
-                        
                         if command -v allure &> /dev/null; then
                             echo "Allure encontrado, generando reporte..."
                             allure generate reports/allure-results -o reports/allure-report --clean
