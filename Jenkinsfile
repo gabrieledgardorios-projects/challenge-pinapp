@@ -39,6 +39,16 @@ pipeline {
             defaultValue: true,
             description: 'Enviar reporte por email al finalizar'
         )
+        string(
+            name: 'EMAIL_USER',
+            defaultValue: 'tu-email@gmail.com',
+            description: 'Usuario de email para enviar reportes (Gmail)'
+        )
+        password(
+            name: 'EMAIL_PASSWORD',
+            defaultValue: '',
+            description: 'Contraseña de aplicación de Gmail para enviar reportes'
+        )
     }
     
     environment {
@@ -53,6 +63,8 @@ pipeline {
         TEST_TYPE = "${params.TEST_TYPE}"
         EMAIL_RECIPIENTS = "${params.EMAIL_RECIPIENTS}"
         SEND_EMAIL = "${params.SEND_EMAIL}"
+        EMAIL_USER = "${params.EMAIL_USER}"
+        EMAIL_PASSWORD = "${params.EMAIL_PASSWORD}"
     }
     
     stages {
