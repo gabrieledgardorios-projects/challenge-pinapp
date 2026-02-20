@@ -47,6 +47,12 @@ pipeline {
         BUILD_TIMESTAMP = sh(returnStdout: true, script: "date +%Y%m%d_%H%M%S").trim()
         TEST_REPORT_NAME = "Test_Report_${BUILD_TIMESTAMP}"
         JENKINS_NODE_COOKIE = 'dontKillMe'
+        BASE_URL = "${params.BASE_URL}"
+        BROWSER = "${params.BROWSER}"
+        HEADLESS = "${params.HEADLESS}"
+        TEST_TYPE = "${params.TEST_TYPE}"
+        EMAIL_RECIPIENTS = "${params.EMAIL_RECIPIENTS}"
+        SEND_EMAIL = "${params.SEND_EMAIL}"
     }
     
     stages {
