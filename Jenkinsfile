@@ -286,6 +286,8 @@ pipeline {
                     sh '''
                         # Extraer información del reporte
                         if [ -f "reports/test.log" ]; then
+                            echo "Enlace al reporte Allure: ${env.BUILD_URL}Allure_Report/"
+                            echo "Enlace a artefactos grabaciones: ${env.BUILD_URL}artifact/reports/"
                             cp reports/test.log reports/email_summary.txt
                         fi
                         
