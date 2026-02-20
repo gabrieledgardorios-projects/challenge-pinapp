@@ -24,3 +24,6 @@ class Config:
     
     # Ambiente
     ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
+    
+    # Moneda
+    CURRENCY = os.getenv('CURRENCY', 'USD')

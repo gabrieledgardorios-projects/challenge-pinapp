@@ -9,6 +9,8 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from config.config import Config
 import logging
 import os
+import subprocess
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +22,8 @@ class DriverFactory:
     def create_driver(browser=None):
         """
         Crea una instancia del WebDriver según el navegador especificado
-        
         Args:
-            browser (str): Navegador a usar (chrome, firefox, edge)
-            
+            browser (str): Navegador a usar (chrome, firefox, edge)     
         Returns:
             WebDriver: Instancia del WebDriver
         """
@@ -41,16 +41,22 @@ class DriverFactory:
                 options.add_argument('--disable-dev-shm-usage')
                 options.add_argument('--disable-gpu')
                 options.add_argument('--window-size=1920,1080')
+                options.add_argument('--disable-blink-features=AutomationControlled')
                 
-                # Usar webdriver-manager para obtener la ruta del driver
-                driver_path = ChromeDriverManager().install()
-                # Validar que el archivo existe
-                if os.path.exists(driver_path):
-                    service = ChromeService(driver_path)
-                    driver = webdriver.Chrome(service=service, options=options)
-                else:
-                    logger.error(f"El archivo del driver no existe: {driver_path}")
-                    raise FileNotFoundError(f"ChromeDriver no encontrado en: {driver_path}")
+                try:
+                    # Intentar usar webdriver-manager directamente
+                    driver = webdriver.Chrome(
+                        service=ChromeService(ChromeDriverManager().install()),
+                        options=options
+                    )
+                except Exception as e:
+                    logger.warning(f"Error con webdriver-manager: {e}. Intentando método alternativo...")
+                    # Método alternativo si falla webdriver-manager
+                    try:
+                        driver = webdriver.Chrome(options=options)
+                    except Exception as e2:
+                        logger.error(f"Error al crear ChromeDriver: {e2}")
+                        raise
                 
             elif browser == 'firefox':
                 options = webdriver.FirefoxOptions()
@@ -59,13 +65,20 @@ class DriverFactory:
                 options.add_argument('--width=1920')
                 options.add_argument('--height=1080')
                 
-                driver_path = GeckoDriverManager().install()
-                if os.path.exists(driver_path):
-                    service = FirefoxService(driver_path)
-                    driver = webdriver.Firefox(service=service, options=options)
-                else:
-                    logger.error(f"El archivo del driver no existe: {driver_path}")
-                    raise FileNotFoundError(f"GeckoDriver no encontrado en: {driver_path}")
+                try:
+                    # Intentar usar webdriver-manager directamente
+                    driver = webdriver.Firefox(
+                        service=FirefoxService(GeckoDriverManager().install()),
+                        options=options
+                    )
+                except Exception as e:
+                    logger.warning(f"Error con webdriver-manager: {e}. Intentando método alternativo...")
+                    # Método alternativo si falla webdriver-manager
+                    try:
+                        driver = webdriver.Firefox(options=options)
+                    except Exception as e2:
+                        logger.error(f"Error al crear GeckoDriver: {e2}")
+                        raise
                 
             else:
                 raise ValueError(f"Navegador no soportado: {browser}")

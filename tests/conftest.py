@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from src.base import DriverFactory
 from config.config import Config
+from src.utils.video_recorder import VideoRecorder
 import allure
 
 # Configurar logging
@@ -18,7 +19,43 @@ logging.basicConfig(
 
 
 @pytest.fixture(scope="function")
-def driver():
+def video_recorder(request):
+    """
+    Fixture que proporciona grabación automática de video para cada test
+    """
+    # Crear directorios necesarios si no existen
+    os.makedirs(Config.REPORTS_DIR, exist_ok=True)
+    
+    # Crear nombre del video con timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    video_filename = f"{Config.REPORTS_DIR}/{request.node.name}_{timestamp}.avi"
+    
+    # Inicializar recorder
+    recorder = VideoRecorder(video_filename, fps=5)
+    recorder.start()
+    
+    logging.info(f"Iniciando grabación de video: {video_filename}")
+    
+    yield recorder
+    
+    # Detener grabación
+    recorder.stop()
+    logging.info(f"Video guardado: {video_filename}")
+    
+    # Adjuntar video a Allure si existe
+    if os.path.exists(video_filename):
+        try:
+            allure.attach.file(
+                video_filename,
+                name=f"Video_{request.node.name}",
+                attachment_type=allure.attachment_type.MP4
+            )
+        except:
+            pass  # Si falla el adjunto, continuamos sin problema
+
+
+@pytest.fixture(scope="function")
+def driver(request, video_recorder):
     """
     Fixture que proporciona una instancia de WebDriver para cada test
     """

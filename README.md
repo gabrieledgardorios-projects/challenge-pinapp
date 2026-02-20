@@ -1,28 +1,49 @@
-# Proyecto de Pruebas Automatizadas con Selenium y Pytest
+# Automatización de Pruebas Web - Amazon.com Testing Framework
 
-Proyecto de automatización de pruebas para sitios web utilizando Selenium, Pytest e integración con Jenkins CI/CD.
+## 📋 Descripción General
 
-## 🚀 Características
+Framework robusto que automatiza flujos de búsqueda en Amazon.com con:
+- ✅ **Grabación automática de video** (bajo consumo de CPU)
+- ✅ **Filtrado dinámico** por marca y precio con verificación
+- ✅ **Extracción de datos** de productos (nombres, precios, opciones)
+- ✅ **Ordenamiento flexible** (5 opciones: precio, reseñas, fecha, relevancia)
+- ✅ **Page Object Model** para máxima mantenibilidad
+- ✅ **Reportes** completos (HTML, Allure, Coverage)
+- ✅ **Jenkins CI/CD** con notificaciones por email
 
-- ✅ Framework Selenium para automatización de navegador
-- ✅ Pytest como framework de testing
-- ✅ Page Object Model (POM) para mejor mantenimiento
-- ✅ Configuración centralizada con variables de entorno
-- ✅ Reportes HTML con pytest-html
-- ✅ Cobertura de código con pytest-cov
-- ✅ Integración con Jenkins (Jenkinsfile incluido)
-- ✅ Markers para ejecutar tipos específicos de tests
-- ✅ Logging completo y gestión de screenshots
-- ✅ Webdriver Manager para gestión automática de drivers
+### Stack Tecnológico
+
+| Componente | Versión | Uso |
+|-----------|---------|-----|
+| Python | 3.12.7 | Lenguaje |
+| Selenium | 4.15.2 | Automatización |
+| Pytest | 7.4.3 | Testing |
+| OpenCV | 4.8+ | Grabación video |
+| Allure | 2.13.2 | Reportes |
+| WebDriver Manager | 4.0+ | ChromeDriver automático |
 
 ## 📋 Requisitos Previos
 
-- Python 3.8 o superior
-- pip (gestor de paquetes de Python)
-- Git (opcional, para control de versiones)
-- Jenkins (para CI/CD)
+```
+Python 3.12.7
+pip (gestor de paquetes)
+Git (opcional)
+```
 
-## 🛠️ Instalación
+### Dependencias Clave
+```
+selenium>=4.15.2
+pytest>=7.4.3
+pytest-html>=4.1.1
+pytest-cov>=4.1.0
+allure-pytest>=2.13.2
+opencv-python>=4.8.0
+numpy>=1.24.0
+pillow>=10.0.0
+webdriver-manager>=4.0.0
+```
+
+## 🛠️ Instalación y Configuración
 
 ### 1. Clonar o descargar el proyecto
 
@@ -33,11 +54,11 @@ cd Challenge
 ### 2. Crear entorno virtual
 
 ```bash
-# En Windows
+# Windows
 python -m venv .venv
 .venv\Scripts\activate
 
-# En Linux/Mac
+# Linux/Mac
 python3 -m venv .venv
 source .venv/bin/activate
 ```
@@ -48,13 +69,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configurar variables de entorno
+### 4. Verificar instalación
 
 ```bash
-# Copiar el archivo de ejemplo
-cp .env.example .env
-
-# Editar .env con la configuración deseada
+pytest --version
+python -c "import selenium; print(selenium.__version__)"
+python -c "import allure; print(allure.__version__)"
 ```
 
 ## 📁 Estructura del Proyecto
@@ -62,298 +82,289 @@ cp .env.example .env
 ```
 Challenge/
 ├── config/
-│   └── config.py              # Configuración centralizada
+│   ├── config.py                    # Configuración centralizada (URLs, timeouts, etc.)
+│   └── __pycache__/
 ├── src/
-│   ├── base.py                # Clases base (DriverFactory, BasePage)
-│   └── pages.py               # Page Objects (HomePage, etc.)
+│   ├── base.py                      # DriverFactory y BasePage (métodos reutilizables)
+│   ├── pages/
+│   │   ├── home_page.py            # Page Object para página principal
+│   │   ├── product_results_page.py # Page Object para resultados (CORE)
+│   │   └── __pycache__/
+│   ├── utils/
+│   │   ├── video_recorder.py       # Clase VideoRecorder para grabación
+│   │   └── __init__.py
+│   └── __init__.py
 ├── tests/
-│   ├── conftest.py            # Configuración de fixtures de pytest
-│   └── test_home.py           # Test cases de ejemplo
-├── reports/                   # Reportes y logs (generado automáticamente)
-├── .env.example               # Plantilla de variables de entorno
-├── .gitignore                 # Archivo git ignore
-├── Jenkinsfile                # Pipeline para Jenkins
-├── pytest.ini                 # Configuración de pytest
-├── requirements.txt           # Dependencias de Python
-└── README.md                  # Este archivo
+│   ├── conftest.py                  # Fixtures de pytest (driver, video_recorder)
+│   ├── test_get_products.py        # Test case principal
+│   └── __pycache__/
+├── reports/                         # Se genera automáticamente
+│   ├── report.html                 # Reporte Pytest
+│   ├── allure-results/             # Datos para Allure
+│   ├── coverage/                   # Cobertura de código
+│   ├── screenshots/                # Screenshots en fallos
+│   ├── *.avi                       # Videos de test grabados
+│   └── test.log                    # Logs detallados
+├── .gitignore                       # Archivo de git ignore
+├── Jenkinsfile                      # Pipeline para Jenkins CI/CD
+├── pytest.ini                       # Configuración de Pytest
+├── requirements.txt                 # Dependencias
+└── README.md                        # Este archivo
 ```
 
 ## ▶️ Ejecución de Tests
 
+### Ejecutar test específico (recomendado para ver grabación)
+
+```bash
+.\.venv\Scripts\python -m pytest tests/test_get_products.py::TestGetProducts::test_get_information_of_products -v -s
+```
+
+**Parámetros explicados:**
+- `-v`: Verbose (salida detallada)
+- `-s`: Show print statements (mostrar logs en consola)
+
 ### Ejecutar todos los tests
 
 ```bash
-pytest tests/
+.\.venv\Scripts\python -m pytest tests/ -v
 ```
 
-### Ejecutar tests con opción específica de navegador
+### Ejecutar con opciones personalizadas
 
 ```bash
-# Chrome (por defecto)
+# Browser específico
 pytest tests/ --browser=chrome
 
-# Firefox
-pytest tests/ --browser=firefox
+# Completamente visible (sin headless)
+pytest tests/ --headless=False
 
-# Modo headless
-pytest tests/ --headless
+# URL personalizada
+pytest tests/ --base-url=https://www.amazon.com
 ```
 
-### Ejecutar tests específicos por marker
+## 🎥 Video Recording
 
+La grabación es **completamente automática**:
+- Se inicia con cada test, se detiene al finalizar
+- 5 FPS (bajo consumo CPU), resolución nativa
+- Ubicación: `reports/test_name_timestamp.avi` (~15 MB)
+- Compatible con VLC, Windows Media Player
+
+Ver video:
 ```bash
-# Tests de humo (smoke tests)
-pytest tests/ -m smoke
-
-# Tests de regresión
-pytest tests/ -m regression
-
-# Tests de sanidad
-pytest tests/ -m sanity
-
-# Tests críticos
-pytest tests/ -m critical
-```
-
-### Ejecutar test específico
-
-```bash
-pytest tests/test_home.py::TestHomePage::test_page_title
-```
-
-### Con URL personalizada
-
-```bash
-pytest tests/ --base-url=https://www.tudominio.com
+# Windows
+start reports/test_get_information_of_products_*.avi
 ```
 
 ## 📊 Reportes
 
-Los reportes se generan automáticamente en la carpeta `reports/`:
+- **HTML Report**: `reports/report.html` (Estado, duración, logs, cobertura)
+- **Allure Report**: `allure serve reports/allure-results` (Interactivo, tendencias, videos)
+- **Coverage Report**: `reports/coverage/index.html` (~76% cobertura global)
 
-- **report.html** - Reporte HTML de tests
-- **allure-report/** - Reporte Allure interactivo (mejor visualización)
-- **coverage/** - Reporte de cobertura de código
-- **screenshots/** - Screenshots en caso de fallos
-- **test.log** - Archivo de log detallado
+**Page Object Model (POM):**
+- BasePage: Métodos comunes (click, send_keys, get_text, etc.)
+- HomePage: Operación inicial y búsqueda
+- ProductResultsPage: Filtrado, ordenamiento, extracción
 
-### Generar Reporte Allure
-
-```bash
-# Después de ejecutar los tests
-allure serve reports/allure-results
+**Flujo:**
+```
+Inicio → VideoRecorder inicia → WebDriver crea → 
+Búsqueda → Filtros (marca/precio) → Ordenamiento → 
+Extracción datos → VideoRecorder detiene → Reportes
 ```
 
-Esto abrirá un servidor local con el reporte interactivo de Allure en el navegador.
-
-Para visualizar el reporte HTML tradicional:
-
-```bash
-# En Windows
-start reports/report.html
-
-# En Linux/Mac
-open reports/report.html
+**Manejo de Elementos Duplicados:**
+```xpath
+# Usa aria-hidden para seleccionar solo el elemento visible
+//div[@aria-hidden='false']//*[@id='s-result-sort-select_2']
 ```
 
-## 🏗️ Estructura del Código
+##  Integración CI/CD con Jenkins
 
-### Page Object Model (POM)
+### ✨ Características del Jenkinsfile
 
-```python
-from src.pages import HomePage
-from src.base import DriverFactory
+#### 🔧 Parámetros Configurables
 
-driver = DriverFactory.create_driver()
-home = HomePage(driver)
-home.load()
-home.search("término de búsqueda")
-```
+El Jenkinsfile incluye los siguientes parámetros que puedes configurar en cada ejecución:
 
-### Decoradores de Allure en Tests
+| Parámetro | Tipo | Valor Default | Descripción |
+|-----------|------|----------------|-----------| 
+| **BROWSER** | Choice | chrome | Navegador: chrome o firefox |
+| **HEADLESS** | Boolean | false | Ejecutar sin interfaz gráfica |
+| **BASE_URL** | String | https://www.amazon.com | URL del sitio a probar |
+| **TEST_TYPE** | Choice | all | Tipo: all, smoke, regression, sanity |
+| **EMAIL_RECIPIENTS** | String | qa-team@example.com | Email para notificaciones |
+| **SEND_EMAIL** | Boolean | true | Activar notificaciones por email |
 
-```python
-import pytest
-import allure
-from src.pages import HomePage
+#### 📋 Stages del Pipeline
 
-@allure.feature("Home Page")
-@allure.story("Page Load")
-class TestHomePage:
-    
-    @pytest.mark.smoke
-    @allure.title("Verificar título de página")
-    @allure.description("Valida que el título sea correcto")
-    @allure.severity(allure.severity_level.CRITICAL)
-    def test_page_title(self, driver):
-        """Verifica que el título de la página sea correcto"""
-        with allure.step("Cargar página"):
-            home = HomePage(driver)
-            home.load()
-        
-        with allure.step("Obtener título"):
-            title = home.get_page_title()
-        
-        with allure.step("Validar"):
-            assert title, "Título vacío"
-        
-        allure.attach(title, name="Page Title", 
-                     attachment_type=allure.attachment_type.TEXT)
-```
+1. **Información del Build**
+   - Muestra todos los parámetros y configuración
+   - Genera timestamp único para el build
 
-### Crear nuevos Page Objects
+2. **Validación de Entorno**
+   - Verifica Python, pip y dependencias
+   - Crea directorios necesarios para reportes
 
-```python
-from selenium.webdriver.common.by import By
-from src.base import BasePage
+3. **Setup de Dependencias**
+   - Crea entorno virtual aislado
+   - Instala requirements.txt
+   - Verifica instalaciones críticas
 
-class ProductPage(BasePage):
-    PRODUCT_TITLE = (By.CLASS_NAME, "product-title")
-    ADD_TO_CART = (By.ID, "add-cart-btn")
-    
-    def get_product_title(self):
-        return self.get_text(self.PRODUCT_TITLE)
-    
-    def add_product_to_cart(self):
-        self.click(self.ADD_TO_CART)
-```
+4. **Ejecutar Tests**
+   - Ejecuta pytest con parámetros configurados
+   - Genera reportes HTML, Allure y Cobertura
+   - Maneja fallos sin interrumpir el pipeline
 
-### Crear nuevos Tests
+5. **Generar Reportes Allure**
+   - Crea visualización interactiva de Allure
+   - Fallback si Allure CLI no está disponible
 
-```python
-import pytest
-from src.pages import ProductPage
+6. **Publicar Reportes en Jenkins**
+   - Publica 3 reportes HTML en Jenkins:
+     - Pytest HTML Report
+     - Code Coverage Report
+     - Allure Report (si disponible)
 
-class TestProductPage:
-    @pytest.mark.smoke
-    def test_product_title_visible(self, driver):
-        product = ProductPage(driver)
-        assert product.get_product_title(), "Título no encontrado"
-```
+7. **Archivar Artefactos**
+   - Guarda logs, screenshots, videos
+   - Permite descargar para análisis posterior
 
-## 🔗 Integración con Jenkins
+8. **Preparar Email**
+   - Genera HTML profesional para email
+   - Incluye links a todos los reportes
+   - Se ejecuta si SEND_EMAIL=true
 
-### Configurar Pipeline en Jenkins
+### 📧 Configuración de Email en Jenkins
 
-1. Crear nuevo Job (Pipeline)
-2. Seleccionar "Pipeline script from SCM"
-3. Seleccionar Git como SCM
-4. Ingresar la URL del repositorio
-5. Especificar la rama (main, develop, etc.)
-6. Apuntar al archivo Jenkinsfile
+#### Requisitos Previos
 
-### Parámetros disponibles en Jenkins
+1. **Plugin instalado**: Email Extension Plugin
+   ```
+   Manage Jenkins → Manage Plugins → Email Extension Plugin (marcar y instalar)
+   ```
 
-- **BROWSER**: chrome o firefox
-- **HEADLESS**: true o false
-- **BASE_URL**: URL del sitio a probar
-- **TEST_TYPE**: all, smoke, regression, sanity
+2. **Configurar servidor SMTP en Jenkins**:
+   ```
+   Manage Jenkins → Configure System → Email Notification
+   ```
+   
+   Configuración mínima:
+   ```
+   SMTP Server: smtp.gmail.com (o tu servidor)
+   SMTP Port: 587
+   Username: tu-correo@gmail.com
+   Password: tu-contraseña-de-app
+   Use TLS: ✓ (marcado)
+   ```
 
-### Ejemplo de ejecución en Jenkins
+#### Configurar Credenciales (Recomendado)
+
+Si usas Gmail con 2FA:
+
+1. Generar "App Password" en Google:
+   - Ir a https://myaccount.google.com/security
+   - Buscar "Contraseñas de aplicación"
+   - Generar contraseña para Jenkins
+   - Usar esa contraseña en la configuración
+
+#### Verificar Configuración SMTP
 
 ```groovy
-// Los parámetros se pasan automáticamente
-// al pipeline desde la UI de Jenkins
+// En Jenkins Console (Script Console):
+def proc = "mail -s 'Test' correo@example.com".execute()
+proc << "Test message"
+proc.waitFor()
 ```
 
-## 🐛 Debugging
+### 🚀 Crear un Job de Jenkins
 
-### Ver logs detallados
+#### Opción 1: Pipeline Job (Recomendado)
 
-```bash
-pytest tests/ -v --tb=long
-```
+1. **En Jenkins Dashboard**:
+   - Click en "New Item"
+   - Nombre: `Amazon-Product-Tests`
+   - Seleccionar: "Pipeline"
+   - Click OK
 
-### Ejecutar sin headless para ver el navegador
+2. **Configuración**:
+   ```
+   Definition: Pipeline script from SCM
+   SCM: Git
+   Repository URL: https://github.com/tu-usuario/Challenge.git
+   Credentials: (si es privado)
+   Branch: */main (o tu rama)
+   Script Path: Jenkinsfile
+   ```
 
-```bash
-pytest tests/ --headless=False
-```
+3. **Build Triggers** (Opcional):
+   ```
+   - Poll SCM: H/30 * * * * (cada 30 minutos)
+   - GitHub hook trigger (si usas GitHub)
+   ```
 
-### Aumentar espera explícita en conftest.py
+4. **Post-build Actions**:
+   ✓ (Automático en el Jenkinsfile)
 
-```python
-Config.EXPLICIT_WAIT = 30  # segundos
-```
+5. **Guardar y ejecutar**
 
-## 📝 Mejores Prácticas
+#### Opción 2: Job de Archivo Declarativo
 
-1. **Organización**: Mantener un Page Object por cada página
-2. **Naming**: Usar nombres descriptivos en test functions
-3. **Markers**: Usar markers apropiados (smoke, regression, etc.)
-4. **Allure Decoradores**: Usar `@allure.feature`, `@allure.story`, `@allure.severity`
-5. **Allure Steps**: Dividir tests en pasos con `with allure.step()`
-6. **Attachments**: Adjuntar datos relevantes con `allure.attach()`
-7. **Logs**: Aprovechar el logging para debug
-8. **Esperas**: Usar WebDriverWait en lugar de sleep
-9. **Fixtures**: Reutilizar fixtures de conftest.py
-10. **Screenshots**: Capturar automáticamente en caso de fallos
+1. **Crear nuevo Job**:
+   - Tipo: "Cambiar a Pipeline"
+   - Script:
+   ```groovy
+   @Library('shared-library') _
+   
+   def buildResult = build(
+       job: 'Amazon-Product-Tests',
+       parameters: [
+           string(name: 'BROWSER', value: 'chrome'),
+           booleanParam(name: 'HEADLESS', value: false),
+           string(name: 'BASE_URL', value: 'https://www.amazon.com')
+       ]
+   )
+   ```
 
-## 🚨 Troubleshooting
+### 🏃 Ejecutar Tests desde Jenkins
 
-### Error: "No module named 'selenium'"
+#### Ejecución Manual
 
-```bash
-pip install -r requirements.txt
-```
+1. Click en "Build with Parameters"
+2. Llenar los parámetros deseados:
+   - Browser: chrome
+   - Headless: false
+   - Base URL: https://www.amazon.com
+   - Test Type: all
+   - Email Recipients: tu@correo.com
+3. Click "Build"
 
-### Error: "Chrome driver not found"
+#### Resultado de la Ejecución
 
-El proyecto usa `webdriver-manager` que descarga automáticamente los drivers.
-Si hay problemas, limpiar la caché:
+Una vez completado el build:
 
-```bash
-pip install --upgrade webdriver-manager
-```
+- ✅ **Reportes visibles en Jenkins UI**:
+  - "Pytest HTML Report" tab
+  - "Code Coverage Report" tab
+  - "Allure Report" tab
 
-### Error: "Allure no encontrado"
+- 📧 **Email enviado** (si SEND_EMAIL=true):
+  - Status del build
+  - Links a los reportes
+  - Attachments: report.html y test.log
 
-Instalar Allure Command Line:
+- 📦 **Artefactos descargables**:
+  - Logs
+  - Videos (.avi)
+  - Screenshots
+  - Resultados de Allure
 
-```bash
-# Windows (requiere Chocolatey)
-choco install allure
+### 📊 Email Enviado
 
-# Linux
-brew install allure
+Email con status del build, links a reportes (HTML, Allure, Coverage) y archivos adjuntos (report.html, test.log).
 
-# Manual (Windows/Linux/Mac)
-# Descargar desde: https://github.com/allure-framework/allure2/releases
-# Extraer y agregar bin a PATH
-```
-
-### Tests muy lentos
-
-Aumentar el tamaño de la ventana o reducir timeouts:
-
-```python
-# En config/config.py
-IMPLICIT_WAIT = 5
-EXPLICIT_WAIT = 10
-```
-
-## 📚 Referencias
-
-- [Selenium Documentation](https://www.selenium.dev/documentation/)
-- [Pytest Documentation](https://docs.pytest.org/)
-- [Allure Report](https://docs.qameta.io/allure/)
-- [WebDriver Manager](https://github.com/SergeyPirogov/webdriver_manager)
-- [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/)
-
-## 📄 Licencia
-
-Este proyecto está disponible bajo la licencia MIT.
-
-## 👥 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Hacer fork del proyecto
-2. Crear una rama para la feature (`git checkout -b feature/AmazingFeature`)
-3. Commit de los cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
-
-## ❓ Preguntas o Problemas
-
-Si tienes preguntas o encuentras problemas, abre un issue en el proyecto.
+**Troubleshooting Email:**
+- **Error "Email not sent"**: Verificar plugin "Email Extension" instalado + SMTP configurado + puertos abiertos
+- **Error "Python not found"**: Configurar PATH en Jenkins → Configure System → Global properties
