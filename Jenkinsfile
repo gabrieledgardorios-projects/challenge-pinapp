@@ -393,6 +393,7 @@ EOF
                 ║ Workspace: ${WORKSPACE}
                 ╚════════════════════════════════════════════════════════╝
                 """
+                    echo "[ENLACE] Reporte Allure: ${env.BUILD_URL}Allure_Report/"
                 
                 // Limpiar ambiente virtual viejo (opcional)
                 sh '''
@@ -444,6 +445,7 @@ EOF
 }
 
 // Función para enviar email
+                    echo "[ENLACE] Artefactos grabaciones y reportes: ${env.BUILD_URL}artifact/reports/"
 def sendEmailNotification(String buildStatus) {
     try {
         echo "Enviando notificación por email..."
@@ -458,26 +460,24 @@ def sendEmailNotification(String buildStatus) {
         String bodyHtml = """
         <html>
             <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; }
-                    .header { background-color: ${buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'}; color: white; padding: 20px; }
-                    .content { padding: 20px; }
-                    .info { background-color: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007bff; }
-                    .links { margin: 20px 0; }
-                    a { color: #007bff; text-decoration: none; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>${statusIcon} Test Report - Build #${env.BUILD_NUMBER}</h1>
-                    <p>Status: <strong>${statusColor}</strong></p>
-                </div>
-                
-                <div class="content">
-                    <h2>Resumen del Build</h2>
-                    
-                    <div class="info">
+                script {
+                    echo """
+                    ╔════════════════════════════════════════════════════════╗
+                    ║                 RESUMEN DE BUILD                       ║
+                    ╠════════════════════════════════════════════════════════╣
+                    ║ Build Status: ${currentBuild.result}
+                    ║ Artefactos: reports/ (descargables)
+                    ║ Logs: console output
+                    ║ Workspace: ${WORKSPACE}
+                    ╚════════════════════════════════════════════════════════╝
+                    """
+                    // Limpiar ambiente virtual viejo (opcional)
+                    sh '''
+                        if [ -d "${PYTHON_ENV}" ]; then
+                            echo "Entorno virtual encontrado en ${PYTHON_ENV}"
+                        fi
+                    '''
+                }
                         <p><strong>Build Number:</strong> ${env.BUILD_NUMBER}</p>
                         <p><strong>Build ID:</strong> ${env.BUILD_ID}</p>
                         <p><strong>Status:</strong> ${buildStatus}</p>
