@@ -94,6 +94,8 @@ pipeline {
             steps {
                 script {
                     echo "========== Validando entorno =========="
+                    // Mostrar el directorio de trabajo actual (workspace)
+                    sh 'pwd'
                     
                     // Validar Python
                     sh '''
@@ -148,6 +150,8 @@ pipeline {
             steps {
                 script {
                     echo "========== Ejecutando teste: ${params.TEST_TYPE} =========="
+                    // Confirmar directorio antes de ejecutar tests
+                    sh 'pwd'
                     
                     try {
                         sh '''
@@ -174,40 +178,46 @@ pipeline {
                             # Ejecutar
                             echo "Comando: ${PYTEST_CMD}"
                             eval ${PYTEST_CMD}
+                                    try {
+                                        dir(env.WORKSPACE) {
+                                            sh '''
+                                                . ${PYTHON_ENV}/bin/activate 2>/dev/null || . ${PYTHON_ENV}/Scripts/activate 2>/dev/null
+                                                # Construir comando pytest
+                                                PYTEST_CMD="pytest tests/ -v --tb=short"
+                                                # Agregar filtro de marker si no es "all"
+                                                if [ "${TEST_TYPE}" != "all" ]; then
+                                                    PYTEST_CMD="${PYTEST_CMD} -m ${TEST_TYPE}"
+                                                fi
+                                                # Agregar parámetros
+                                                PYTEST_CMD="${PYTEST_CMD} --browser=${BROWSER}"
+                                                PYTEST_CMD="${PYTEST_CMD} --headless=${HEADLESS}"
+                                                PYTEST_CMD="${PYTEST_CMD} --base-url=${BASE_URL}"
+                                                # Agregar reportes
+                                                PYTEST_CMD="${PYTEST_CMD} --html=reports/report.html --self-contained-html"
+                                                PYTEST_CMD="${PYTEST_CMD} --cov=src --cov-report=html:reports/coverage --cov-report=term"
+                                                PYTEST_CMD="${PYTEST_CMD} --alluredir=reports/allure-results"
+                                                # Ejecutar
+                                                echo "Comando: ${PYTEST_CMD}"
+                                                eval ${PYTEST_CMD}
+                                            '''
+                                        }
+                                    } catch (Exception e) {
+                                        echo "Tests fallaron pero continuamos con reportes: ${e.message}"
+                                        // No fallar el pipeline aquí para que se generen los reportes
+                                    }
+                    dir(env.WORKSPACE) {
+                        sh '''
+                            . ${PYTHON_ENV}/bin/activate 2>/dev/null || . ${PYTHON_ENV}/Scripts/activate 2>/dev/null
+                            if command -v allure &> /dev/null; then
+                                echo "Allure encontrado, generando reporte..."
+                                allure generate reports/allure-results -o reports/allure-report --clean
+                                echo "Reporte Allure generado en reports/allure-report/index.html"
+                            else
+                                echo "Advertencia: Allure CLI no encontrado"
+                                echo "Los datos de Allure se han guardado en reports/allure-results/"
+                            fi
                         '''
-                    } catch (Exception e) {
-                        echo "Tests fallaron pero continuamos con reportes: ${e.message}"
-                        // No fallar el pipeline aquí para que se generen los reportes
                     }
-                }
-            }
-        }
-        
-        stage('Generar Reportes Allure') {
-            steps {
-                script {
-                    echo "========== Instalando Allure CLI =========="
-                    sh '''
-                        # Instalar Allure CLI si no existe
-                        if [ ! -d "allure" ]; then
-                            wget -q https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip -O allure.zip || curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
-                            unzip -q allure.zip
-                            mv allure-2.24.1 allure
-                        fi
-                        export PATH="$PWD/allure/bin:$PATH"
-                    '''
-                    echo "========== Generando Reporte Allure =========="
-                    sh '''
-                        . ${PYTHON_ENV}/bin/activate 2>/dev/null || . ${PYTHON_ENV}/Scripts/activate 2>/dev/null
-                        if command -v allure &> /dev/null; then
-                            echo "Allure encontrado, generando reporte..."
-                            allure generate reports/allure-results -o reports/allure-report --clean
-                            echo "Reporte Allure generado en reports/allure-report/index.html"
-                        else
-                            echo "Advertencia: Allure CLI no encontrado"
-                            echo "Los datos de Allure se han guardado en reports/allure-results/"
-                        fi
-                    '''
                 }
             }
         }
