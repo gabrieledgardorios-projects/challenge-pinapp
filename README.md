@@ -175,12 +175,6 @@ Búsqueda → Filtros (marca/precio) → Ordenamiento →
 Extracción datos → VideoRecorder detiene → Reportes
 ```
 
-**Manejo de Elementos Duplicados:**
-```xpath
-# Usa aria-hidden para seleccionar solo el elemento visible
-//div[@aria-hidden='false']//*[@id='s-result-sort-select_2']
-```
-
 ## 🚀 Integración CI/CD con Jenkins
 
 ### Pasos para ejecutar Jenkins y el job
