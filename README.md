@@ -259,13 +259,11 @@ Click en "Build with Parameters", selecciona valores y ejecuta.
 
 #### 10. Resultado
 - Reportes generados en `reports/`
-- Email enviado si `SEND_EMAIL` está activado
 - Artefactos descargables: logs, videos, screenshots
 
 ---
 
 ### Troubleshooting
-- Si el email no se envía: revisa variables de entorno, credenciales, y configuración SMTP.
 - Si Jenkins no arranca: revisa versión de Java y puerto 8080.
 - Si Allure no funciona: instala Allure CLI y verifica PATH.
 
@@ -329,51 +327,9 @@ python send_email_report.py
    - Incluye links a todos los reportes
    - Se ejecuta si SEND_EMAIL=true
 
-### 📧 Configuración de Email en Jenkins
-
-#### Requisitos Previos
-
-1. **Plugin instalado**: Email Extension Plugin
-   ```
-   Manage Jenkins → Manage Plugins → Email Extension Plugin (marcar y instalar)
-   ```
-
-2. **Configurar servidor SMTP en Jenkins**:
-   ```
-   Manage Jenkins → Configure System → Email Notification
-   ```
-   
-   Configuración mínima:
-   ```
-   SMTP Server: smtp.gmail.com (o tu servidor)
-   SMTP Port: 587
-   Username: tu-correo@gmail.com
-   Password: tu-contraseña-de-app
-   Use TLS: ✓ (marcado)
-   ```
-
-#### Configurar Credenciales (Recomendado)
-
-Si usas Gmail con 2FA:
-
-1. Generar "App Password" en Google:
-   - Ir a https://myaccount.google.com/security
-   - Buscar "Contraseñas de aplicación"
-   - Generar contraseña para Jenkins
-   - Usar esa contraseña en la configuración
-
-#### Verificar Configuración SMTP
-
-```groovy
-// En Jenkins Console (Script Console):
-def proc = "mail -s 'Test' correo@example.com".execute()
-proc << "Test message"
-proc.waitFor()
-```
-
 ### 🚀 Crear un Job de Jenkins
 
-#### Opción 1: Pipeline Job (Recomendado)
+#### Pipeline Job
 
 1. **En Jenkins Dashboard**:
    - Click en "New Item"
@@ -402,24 +358,6 @@ proc.waitFor()
 
 5. **Guardar y ejecutar**
 
-#### Opción 2: Job de Archivo Declarativo
-
-1. **Crear nuevo Job**:
-   - Tipo: "Cambiar a Pipeline"
-   - Script:
-   ```groovy
-   @Library('shared-library') _
-   
-   def buildResult = build(
-       job: 'Amazon-Product-Tests',
-       parameters: [
-           string(name: 'BROWSER', value: 'chrome'),
-           booleanParam(name: 'HEADLESS', value: false),
-           string(name: 'BASE_URL', value: 'https://www.amazon.com')
-       ]
-   )
-   ```
-
 ### 🏃 Ejecutar Tests desde Jenkins
 
 #### Ejecución Manual
@@ -442,21 +380,8 @@ Una vez completado el build:
   - "Code Coverage Report" tab
   - "Allure Report" tab
 
-- 📧 **Email enviado** (si SEND_EMAIL=true):
-  - Status del build
-  - Links a los reportes
-  - Attachments: report.html y test.log
-
 - 📦 **Artefactos descargables**:
   - Logs
   - Videos (.avi)
   - Screenshots
   - Resultados de Allure
-
-### 📊 Email Enviado
-
-Email con status del build, links a reportes (HTML, Allure, Coverage) y archivos adjuntos (report.html, test.log).
-
-**Troubleshooting Email:**
-- **Error "Email not sent"**: Verificar plugin "Email Extension" instalado + SMTP configurado + puertos abiertos
-- **Error "Python not found"**: Configurar PATH en Jenkins → Configure System → Global properties
